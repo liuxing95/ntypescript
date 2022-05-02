@@ -18,3 +18,15 @@ const scanner = ts.createScanner(ts.ScriptTarget.Latest, true);
       console.log(ts.formatSyntaxKind(token));
       token = scanner.scan();
   }
+
+
+// 76
+// ConstKeyword
+// 71
+// Identifier
+// 58
+// EqualsToken
+// 8
+// NumericLiteral
+// 25
+// SemicolonToken

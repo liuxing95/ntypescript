@@ -4,7 +4,8 @@
   "description": "A nicer version of microsoft/typescript packaged and released for API developers",
   "main": "./bin/ntypescript.js",
   "scripts": {
-    "debug": "ts-node debug/scan.ts"
+    "debug": "ts-node debug/scan.ts",
+    "debug:parse": "ts-node debug/parse.ts"
   },
   "bin": {
     "ntsc": "./bin/tsc"

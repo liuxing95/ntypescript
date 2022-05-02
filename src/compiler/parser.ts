@@ -453,6 +453,8 @@ namespace ts {
         }
     }
 
+    // parser 的入口
+    // sourceText const foo = 123;
     export function createSourceFile(fileName: string, sourceText: string, languageVersion: ScriptTarget, setParentNodes = false, scriptKind?: ScriptKind): SourceFile {
         performance.mark("beforeParse");
         const result = Parser.parseSourceFile(fileName, sourceText, languageVersion, /*syntaxCursor*/ undefined, setParentNodes, scriptKind);
@@ -618,13 +620,19 @@ namespace ts {
         // attached to the EOF token.
         let parseErrorBeforeNextFinishedNode = false;
 
+        // sourceText const foo = 123;
         export function parseSourceFile(fileName: string, sourceText: string, languageVersion: ScriptTarget, syntaxCursor: IncrementalParser.SyntaxCursor, setParentNodes?: boolean, scriptKind?: ScriptKind): SourceFile {
             scriptKind = ensureScriptKind(fileName, scriptKind);
 
+            // 初始化状态
+            // scan 扫描器 的初始化 
+            // scanner.setText(text);
             initializeState(sourceText, languageVersion, syntaxCursor, scriptKind);
 
+            // 解析目标文件
             const result = parseSourceFileWorker(fileName, languageVersion, setParentNodes, scriptKind);
 
+            // 清除状态
             clearState();
 
             return result;
@@ -709,11 +717,15 @@ namespace ts {
         }
 
         function parseSourceFileWorker(fileName: string, languageVersion: ScriptTarget, setParentNodes: boolean, scriptKind: ScriptKind): SourceFile {
+            // 创建解析的目标
             sourceFile = createSourceFile(fileName, languageVersion, scriptKind);
             sourceFile.flags = contextFlags;
 
             // Prime the scanner.
+            // 新扫描的token替换currentToken
+            // 执行 scanner.scan();
             nextToken();
+            // 生成每个range的各种信息(包括起点和终点)
             processReferenceComments(sourceFile);
 
             sourceFile.statements = parseList(ParsingContext.SourceElements, parseStatement);
@@ -1059,6 +1071,7 @@ namespace ts {
             return token() > SyntaxKind.LastReservedWord;
         }
 
+        // parseExpected将会检查解析器状态中的当前 token 是否与指定的 SyntaxKind 匹配。如果不匹配将会生成错误报告。
         function parseExpected(kind: SyntaxKind, diagnosticMessage?: DiagnosticMessage, shouldAdvance = true): boolean {
             if (token() === kind) {
                 if (shouldAdvance) {
@@ -1130,6 +1143,7 @@ namespace ts {
         }
 
         // note: this function creates only node
+        // 创建节点的函数
         function createNode<TKind extends SyntaxKind>(kind: TKind, pos?: number): Node | Token<TKind> | Identifier {
             nodeCount++;
             if (!(pos >= 0)) {
@@ -1151,6 +1165,8 @@ namespace ts {
             return array;
         }
 
+
+        // 将会设置节点的end 位置。并且添加上下文的标志 contextFlags以及解析该节点前出现的错误（如果有错的话，就不能在增量解析中重用此 AST 节点).
         function finishNode<T extends Node>(node: T, end?: number): T {
             node.end = end === undefined ? scanner.getStartPos() : end;
 
@@ -1551,6 +1567,7 @@ namespace ts {
 
             while (!isListTerminator(kind)) {
                 if (isListElement(kind, /*inErrorRecovery*/ false)) {
+                    // parseListElement 处理
                     const element = parseListElement(kind, parseElement);
                     result.push(element);
 
@@ -4889,6 +4906,8 @@ namespace ts {
             return lookAhead(nextTokenIsIdentifierOrStartOfDestructuring);
         }
 
+        // 在 parseStatement中对token做了switch处理, 根据不同的token获取不同的Node节点。比如我们以最后的; 来做一下简单的判断。
+        // 首先;对应的 token值应该是  SyntaxKind.SemicolonToken刚刚好是条件判断中的第一个。
         function parseStatement(): Statement {
             switch (token()) {
                 case SyntaxKind.SemicolonToken:
@@ -4960,6 +4979,7 @@ namespace ts {
             return parseExpressionOrLabeledStatement();
         }
 
+        // 解析命名节点
         function parseDeclaration(): Statement {
             const fullStart = getNodePos();
             const decorators = parseDecorators();
