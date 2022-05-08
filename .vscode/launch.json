@@ -8,7 +8,7 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": [
         "run-script",
-        "debug:parse"
+        "debug:error"
       ],
       "skipFiles": [
         "<node_internals>/**"

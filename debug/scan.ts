@@ -13,10 +13,12 @@ const scanner = ts.createScanner(ts.ScriptTarget.Latest, true);
 
   var token = scanner.scan();
 
-  while(token != ts.SyntaxKind.EndOfFileToken) {
-      console.log(token);
-      console.log(ts.formatSyntaxKind(token));
-      token = scanner.scan();
+  while (token != ts.SyntaxKind.EndOfFileToken) {
+    let currentToken = ts.formatSyntaxKind(token);
+    let tokenStart = scanner.getStartPos();
+    token = scanner.scan();
+    let tokenEnd = scanner.getStartPos();
+    console.log(currentToken, tokenStart, tokenEnd);
   }
 
 

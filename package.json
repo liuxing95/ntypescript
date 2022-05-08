@@ -5,7 +5,9 @@
   "main": "./bin/ntypescript.js",
   "scripts": {
     "debug": "ts-node debug/scan.ts",
-    "debug:parse": "ts-node debug/parse.ts"
+    "debug:parse": "ts-node debug/parse.ts",
+    "debug:checker": "ts-node debug/checker.ts",
+    "debug:error": "bin/tsc debug/error.ts"
   },
   "bin": {
     "ntsc": "./bin/tsc"

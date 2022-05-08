@@ -299,18 +299,19 @@ namespace ts {
         }
 
         /**
-         * Declares a Symbol for the node and adds it to symbols. Reports errors for conflicting identifier names.
-         * @param symbolTable - The symbol table which node will be added to.
-         * @param parent - node's parent declaration.
-         * @param node - The declaration to be added to the symbol table
-         * @param includes - The SymbolFlags that node has in addition to its declaration type (eg: export, ambient, etc.)
-         * @param excludes - The flags which node cannot be declared alongside in a symbol table. Used to report forbidden declarations.
+         * 为指定的节点声明一个符号并加入 symbols。标识名冲突时报告错误。
+         * @param symbolTable - 要将节点加入进的符号表
+         * @param parent - 指定节点的父节点的声明
+         * @param node - 要添加到符号表的（节点）声明
+         * @param includes - SymbolFlags，指定节点额外的声明类型（例如：export, ambient 等）
+         * @param excludes - 不能在符号表中声明的标志，用于报告禁止的声明
          */
         function declareSymbol(symbolTable: SymbolTable, parent: Symbol, node: Declaration, includes: SymbolFlags, excludes: SymbolFlags): Symbol {
             Debug.assert(!hasDynamicName(node));
 
             const isDefaultExport = hasModifier(node, ModifierFlags.Default);
 
+            // 默认导出的函数节点或类节点的符号总是"default"
             // The exported symbol for an export default function/class node is always named "default"
             const name = isDefaultExport && parent ? "default" : getDeclarationName(node);
 
@@ -342,6 +343,16 @@ namespace ts {
                 // Otherwise, we'll be merging into a compatible existing symbol (for example when
                 // you have multiple 'vars' with the same name in the same container).  In this case
                 // just add this node into the declarations list of the symbol.
+                // 检查符号表中是否已有同名的符号。若没有，创建此名称的新符号并加入表中。
+                // 注意，我们尚未给新符号指定任何标志。这可以确保不会和传入的 excludes 标志起冲突。
+                //
+                // 如果已存在的一个符号，查看是否与要创建的新符号冲突。
+                // 例如：同一符号表中，'var' 符号和 'class' 符号会冲突。
+                // 如果有冲突，报告该问题给该符号的每个声明，然后为该声明创建一个新符号
+                //
+                // 如果我们创建的新符号既没在符号表中重名也没和现有符号冲突，就将该节点添加为新符号的唯一声明。
+                //
+                // 否则，就要（将新符号）合并进兼容的现有符号中（例如同一容器中有多个同名的 'var' 时）。这种情况下要把该节点添加到符号的声明列表中。
                 symbol = symbolTable.get(name);
                 if (!symbol) {
                     symbolTable.set(name, symbol = createSymbol(SymbolFlags.None, name));
@@ -362,6 +373,8 @@ namespace ts {
                             (node as NamedDeclaration).name.parent = node;
                         }
 
+                        // 报告每个重复声明的错误位置
+                        // 报告之前遇到的声明错误
                         // Report errors every position with duplicate declaration
                         // Report errors on previous encountered declarations
                         let message = symbol.flags & SymbolFlags.BlockScopedVariable
@@ -1799,6 +1812,7 @@ namespace ts {
             if (name && name.kind === SyntaxKind.Identifier) {
                 const identifier = <Identifier>name;
                 if (isEvalOrArgumentsIdentifier(identifier)) {
+                    // 首先检查名字是否在类声明或者类表达式中，如果是则给出明确消息，否则报告一般性错误
                     // We check first if the name is inside class declaration or class expression; if so give explicit message
                     // otherwise report generic error message.
                     const span = getErrorSpanForNode(file, name);
@@ -1809,6 +1823,7 @@ namespace ts {
         }
 
         function getStrictModeEvalOrArgumentsMessage(node: Node) {
+            // 向用户提供特定消息，有助他们理解为何会处于严格模式。
             // Provide specialized messages to help the user understand why we think they're in
             // strict mode.
             if (getContainingClass(node)) {

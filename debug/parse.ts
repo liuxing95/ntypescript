@@ -9,7 +9,7 @@ function printAllChildren(node: ts.Node, depth = 0) {
 var sourceCode = `const foo = 123;`;
 var sourceFile = ts.createSourceFile('foo.ts', sourceCode, ts.ScriptTarget.ES5, true)
 console.log(sourceFile)
-// printAllChildren(sourceFile);
+printAllChildren(sourceFile);
 
 // SourceFile 0 16
 // ---- SyntaxList 0 16
